@@ -1,0 +1,18 @@
+[Unit]
+Description=Kafka
+After=network.target auditd.service
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/default/kafka
+User=root
+Group=root
+ExecStart=/usr/local/bin/monitor_kafka.py
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=kafka
+
+[Install]
+WantedBy=multi-user.target
