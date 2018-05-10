@@ -1,18 +1,36 @@
+.DS_Store
+Dockerfile.ci
+.bundle/
+vendor/
+*.pyc
 *.env
-
-/.bundle/
-
-/vendor/
 
 /berks-cookbooks/
 
 /packer/*.json
 
-/containers/vis_confluent_base/include/etc/
-/containers/ojdbc6/*.jar
-
-/java/target/
-
 /provisioning/*.template
 
 /cookbooks/kafka-config/.kitchen/
+
+.vagrant
+*~
+*#
+.#*
+\#*#
+.*.sw[a-z]
+*.un~
+
+# Bundler
+bin/*
+.bundle/*
+
+# test kitchen
+.kitchen/
+.kitchen.local.yml
+
+# Chef
+Berksfile.lock
+.zero-knife.rb
+Policyfile.lock.json
+cookbooks/vendor-cookbooks
