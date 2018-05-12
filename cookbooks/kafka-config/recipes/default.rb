@@ -11,6 +11,37 @@
 
 include_recipe 'confluent-cookbook::default'
 include_recipe 'confluent-cookbook::kafka'
+include_recipe 'lvm::default'
+
+package %w[jq]
+
+python_runtime '2'
+
+%w[kazoo dnspython].each do |package|
+  python_package package
+end
+
+python_package 'awscli' do
+  version '1.14.50'
+end
+
+# rubocop:disable Naming/HeredocDelimiterNaming
+bash 'link correct aws version' do
+  code <<-EOH
+  rm -rf /usr/bin/aws
+  chmod +x /usr/local/bin/aws
+  ln -s /usr/local/bin/aws /usr/bin/aws
+  EOH
+end
+
+package 'ruby'
+
+bash 'install gems' do
+  code <<-EOH
+  source /usr/local/rvm/scripts/rvm
+  gem install aws-sdk keystore
+  EOH
+end
 
 # Templated scripts
 %w[monitor_kafka.py].each do |f|
@@ -49,3 +80,5 @@ end
 service 'kafka' do
   provider Chef::Provider::Service::Systemd
 end
+
+# rubocop:enable Naming/HeredocDelimiterNaming
