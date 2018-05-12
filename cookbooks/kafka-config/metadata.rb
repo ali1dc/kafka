@@ -20,3 +20,6 @@ chef_version '>= 12.14' if respond_to?(:chef_version)
 # source_url 'https://github.com/<insert_org_here>/kafka-config'
 
 depends 'confluent-cookbook'
+depends 'poise-python'
+# depends 'filesystem'
+depends 'lvm'

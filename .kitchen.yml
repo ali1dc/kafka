@@ -1,0 +1,25 @@
+---
+driver:
+  name: ec2
+  region: us-east-1
+  aws_ssh_key_id: devops-ex
+  instance_type: t2.large
+  security_group_ids: sg-77fa673e
+  vpc_id: vpc-bfade9c4
+  tags:
+    Server_Function: PACKER_BUILD
+    ECS:ServerFunction: PACKER_BUILD
+    Name: KAFKA-TEST-KITCHEN
+
+provisioner:
+  name: chef_solo
+
+platforms:
+  - name: ubuntu-16.04
+
+suites:
+  - name: kafka
+    run_list:
+      - "java::default"
+      - "kafka-config::default"
+    attributes:
