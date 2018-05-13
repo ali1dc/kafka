@@ -27,9 +27,9 @@ pipeline {
         '''
         sh '''
           # Build AMI with Packer
-          packer build packer/kafka.json
-          ami_id="$(cat manifest.json | jq -r .builds[0].artifact_id | cut -d\':\' -f2)"
-          keystore.rb store --table $inventory_store --kmsid $kms_id --keyname "KAFKA_LATEST_AMI" --value ${ami_id}
+          #packer build packer/kafka.json
+          #ami_id="$(cat manifest.json | jq -r .builds[0].artifact_id | cut -d\':\' -f2)"
+          #keystore.rb store --table $inventory_store --kmsid $kms_id --keyname "KAFKA_LATEST_AMI" --value ${ami_id}
         '''
       }
     }
