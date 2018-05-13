@@ -18,7 +18,12 @@ pipeline {
       steps {
         sh '''
           # create vendor cookbooks
+          whoami
+          cd cookbooks/kafka-config/
+          pwd
           berks vendor ../vendor-cookbooks
+          cd ../..
+          pwd
         '''
         sh '''
           # Build AMI with Packer
