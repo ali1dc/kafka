@@ -7,8 +7,6 @@ vendor/
 
 /berks-cookbooks/
 
-/packer/*.json
-
 /provisioning/*.template
 
 /cookbooks/kafka-config/.kitchen/

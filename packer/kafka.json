@@ -1,0 +1,57 @@
+{
+  "variables": {
+    "aws_access_key": "{{env `AWS_ACCESS_KEY_ID`}}",
+    "aws_secret_key": "{{env `AWS_SECRET_ACCESS_KEY`}}",
+    "region": "us-east-1"
+  },
+  "builders": [
+    {
+      "type": "amazon-ebs",
+      "access_key": "{{user `aws_access_key`}}",
+      "secret_key": "{{user `aws_secret_key`}}",
+      "region": "us-east-1",
+      "source_ami": "ami-43a15f3e",
+      "instance_type": "t2.large",
+      "ssh_username": "ubuntu",
+      "ssh_timeout": "5m",
+      "ami_name": "kafka-{{timestamp}}"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+        "mkdir /home/ubuntu/.aws",
+        "echo '[default]' > /home/ubuntu/.aws/credentials",
+        "echo 'aws_access_key_id = {{user `aws_access_key`}}' >> /home/ubuntu/.aws/credentials",
+        "echo 'aws_secret_access_key = {{user `aws_secret_key`}}' >> /home/ubuntu/.aws/credentials",
+        "echo '[default]' > /home/ubuntu/.aws/config",
+        "echo 'region = us-east-1' >> /home/ubuntu/.aws/config",
+        "echo 'output = json' >> /home/ubuntu/.aws/config",
+        "sudo cp -R /home/ubuntu/.aws/ /root/.aws"
+      ]
+    },
+    {
+      "type": "chef-solo",
+      "cookbook_paths": [
+        "./cookbooks/vendor-cookbooks/"
+      ],
+      "run_list": [
+        "java::default",
+        "recipe[kafka-config::default]"
+      ],
+      "json": {
+        "foo": "bar"
+      },
+      "prevent_sudo": false,
+      "skip_install": false
+    }
+  ],
+  "post-processors": [
+    {
+      "type": "manifest",
+      "output": "manifest.json",
+      "strip_path": true
+    }
+  ]
+}
