@@ -13,7 +13,9 @@ include_recipe 'confluent-cookbook::default'
 include_recipe 'confluent-cookbook::kafka'
 include_recipe 'lvm::default'
 
-package %w[jq]
+%w[jq awscli].each do |pkg|
+  package pkg
+end
 
 # rubocop:disable Naming/HeredocDelimiterNaming
 
@@ -24,6 +26,16 @@ bash 'install python 2.7' do
   sudo apt install python2.7 python-pip -y
   sudo apt install python3-pip -y
   EOH
+end
+
+bash 'install-cfn-tools' do
+  code <<-SCRIPT
+  apt-get update
+  apt-get -y install python-setuptools
+  mkdir aws-cfn-bootstrap-latest
+  curl https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz | tar xz -C aws-cfn-bootstrap-latest --strip-components 1
+  easy_install aws-cfn-bootstrap-latest
+  SCRIPT
 end
 
 python_runtime '2'
