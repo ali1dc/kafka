@@ -6,11 +6,6 @@
 #
 # Copyright:: 2018, Ali Jafari - Excella Data Lab, All Rights Reserved.
 
-# script 'apt-get update' do
-#   interpreter 'bash'
-#   code 'apt-get update'
-# end
-
 include_recipe 'confluent-cookbook::default'
 include_recipe 'confluent-cookbook::kafka'
 include_recipe 'lvm::default'

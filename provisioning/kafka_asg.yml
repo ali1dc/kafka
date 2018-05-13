@@ -4,34 +4,27 @@ Parameters:
   VpcId:
     Description: VPC to deploy to
     Type: String
-    Default: vpc-bfade9c4
   AmiId:
     Description: AMI ID to launch in ASG
     Type: String
   AsgSubnets:
     Description: Subnets in which ASG should be hosted
     Type: CommaDelimitedList
-    Default: subnet-5a7dd010,subnet-f9ecf5a4,subnet-d88a7ebf
   AsgSubnetAzs:
     Description: Availability zones in which ASG should be hosted
     Type: CommaDelimitedList
-    Default: us-east-1a,us-east-1b,us-east-1c
   KeyName:
     Description: EC2 key name to use for instances
     Type: String
-    Default: devops-ex
   BrokerCount:
     Description: Number of kafka brokers to provision
     Type: String
-    Default: 3
   MinInstancesInService:
     Description: Min ISR count for rolling updates
     Type: String
-    Default: 1
   InstanceSecgroup:
     Description: Instance SecurityGroup
     Type: String
-    Default: sg-77fa673e
   InstanceType:
     Description: Instance SecurityGroup
     Type: String
