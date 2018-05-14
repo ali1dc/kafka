@@ -33,7 +33,7 @@ task :deploy do
     'BrokerCount' => '3',
     'MinInstancesInService' => '1',
     'InstanceSecgroup' => ks.query?('PRIVATE_SECURITY_GROUP'),
-    'InstanceType' => 't2.small'
+    'InstanceType' => 't2.large'
   ]
 
   # deploy
