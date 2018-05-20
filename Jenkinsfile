@@ -2,45 +2,48 @@
 
 pipeline {
   agent any
+  parameters {
+    choice(
+      choices: 'YES\NO',
+      description: 'Build AMI feature toggle',
+      name: 'BUILD_AMI')
+  }
   stages {
+
     stage('Commit') {
       steps {
         sh 'which bundle || gem install bundler'
         sh 'bundle install'
       }
     }
+
     stage('Code Analysis') {
       steps {
         rake 'rubocop'
       }
     }
+
     stage('Kafka AMI') {
       steps {
+        echo 'Create Vendor Cookbooks'
         sh '''
-          # create vendor cookbooks
-          whoami
           cd cookbooks/kafka-config/
-          pwd
           berks vendor ../vendor-cookbooks
           cd ../..
-          pwd
         '''
+        echo 'Build AMI with Packer'
+        sh 'packer build packer/kafka.json'
+        echo 'Store Kafka AMI'
         sh '''
-          # Build AMI with Packer
-          #packer build packer/kafka.json
-          #ami_id="$(cat manifest.json | jq -r .builds[0].artifact_id | cut -d\':\' -f2)"
-          #keystore.rb store --table $inventory_store --kmsid $kms_id --keyname "KAFKA_LATEST_AMI" --value ${ami_id}
+          ami_id="$(cat manifest.json | jq -r .builds[0].artifact_id | cut -d\':\' -f2)"
+          keystore.rb store --table $inventory_store --kmsid $kms_id --keyname "KAFKA_LATEST_AMI" --value ${ami_id}
         '''
       }
     }
+
     stage('Deployment') {
       steps {
-        sh '''
-          echo "start deployment"
-          ami_id="$(keystore.rb retrieve --table $inventory_store --keyname KAFKA_LATEST_AMI)"
-          echo "deploy this ami: ${ami_id}"
-        '''
-
+        echo "Start deploying $(keystore.rb retrieve --table $inventory_store --keyname KAFKA_LATEST_AMI)"
         // Deploy Kafka
         rake 'deploy'
       }
