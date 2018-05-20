@@ -386,7 +386,43 @@ def run_kafka(broker_id):
     logger.debug('inner loop completed.')
     p_kafka.wait()
 
+def ensure_ebs_volume_is_mounted(volume):
+    root = '/kafkalogs'
 
+    if (os.path.ismount(root)):
+        logger.debug(root + ' is already mounted.')
+    else:
+        logger.debug('Mounting EBS volume /dev/xvdg to ' + root)
+        return_code = call(['/usr/local/bin/attach_ebs.py', volume, '/dev/xvdg', root])
+
+        if return_code != 0 or not os.path.ismount(root):
+            return False
+
+        logger.debug('EBS volume successfully mounted!')
+        finish_directory_setup(root)
+
+    return True
+
+def finish_directory_setup(root):
+    if not os.path.isdir(root + '/logs'):
+        os.mkdir(root + '/logs')
+
+    # UID 9050, GID 1250 is kafka
+    owner = stat(root).st_uid
+    if owner == 9050:
+        print "Owner of %s is kafka. No need to change." % root
+    else:
+        print "Changing ownership of %s to kafka" % root
+        recursive_chown(root, 9050, 1250)
+
+def recursive_chown(path, uid, gid):
+    os.chown(path, uid, gid)
+
+    for root, dirs, files in os.walk(path):
+        for dirname in dirs:
+            os.chown(os.path.join(root, dirname), uid, gid)
+        for filename in files:
+            os.chown(os.path.join(root, filename), uid, gid)
 
 
 def main(argv=None):
@@ -420,13 +456,13 @@ def main(argv=None):
     try:
         broker_id = configure_kafka()
 
-        # ebs_mounted = False
-        # while not ebs_mounted:
-        #   ebs_mounted = ensure_ebs_volume_is_mounted(cluster_env + '-KAFKA-' + broker_id)
-        #   if not ebs_mounted:
-        #       logger.debug('Failed attempting to mount EBS volume. Trying again in 5 seconds...')
-        #       time.sleep(5)
-        #       broker_id = configure_kafka()
+        ebs_mounted = False
+        while not ebs_mounted:
+          ebs_mounted = ensure_ebs_volume_is_mounted('KAFKA-' + broker_id)
+          if not ebs_mounted:
+              logger.debug('Failed attempting to mount EBS volume. Trying again in 5 seconds...')
+              time.sleep(5)
+              broker_id = configure_kafka()
 
         # logger.debug('main() updating DNS')
         # update_dns(broker_id, d_config)
@@ -450,22 +486,19 @@ def main(argv=None):
     handler_stop_signals(None, None)
 
 
-
-
-
 if __name__ == "__main__":
-  if TESTRUN:
-    import doctest
-    doctest.testmod()
-  if PROFILE:
-    import cProfile
-    import pstats
-    profile_filename = 'cfn.helper.AppEnv_profile.txt'
-    cProfile.run('main()', profile_filename)
-    statsfile = open("profile_stats.txt", "wb")
-    p = pstats.Stats(profile_filename, stream=statsfile)
-    stats = p.strip_dirs().sort_stats('cumulative')
-    stats.print_stats()
-    statsfile.close()
-    sys.exit(0)
-  sys.exit(main())
+    if TESTRUN:
+        import doctest
+        doctest.testmod()
+    if PROFILE:
+        import cProfile
+        import pstats
+        profile_filename = 'cfn.helper.AppEnv_profile.txt'
+        cProfile.run('main()', profile_filename)
+        statsfile = open("profile_stats.txt", "wb")
+        p = pstats.Stats(profile_filename, stream=statsfile)
+        stats = p.strip_dirs().sort_stats('cumulative')
+        stats.print_stats()
+        statsfile.close()
+        sys.exit(0)
+    sys.exit(main())

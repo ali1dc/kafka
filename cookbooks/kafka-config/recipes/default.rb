@@ -37,7 +37,7 @@ end
 
 python_runtime '2'
 
-%w[kazoo dnspython].each do |package|
+%w[kazoo dnspython boto].each do |package|
   python_package package
 end
 
@@ -63,7 +63,7 @@ bash 'install gems' do
 end
 
 # Templated scripts
-%w[monitor_kafka.py].each do |f|
+%w[monitor_kafka.py attach_ebs.py].each do |f|
   template "/usr/local/bin/#{f}" do
     source f
     owner 'root'

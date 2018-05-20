@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 name 'kafka-config'
-maintainer 'The Authors'
-maintainer_email 'you@example.com'
+maintainer 'Ali Jafari'
+maintainer_email 'ali.jafari@excella.com'
 license 'All Rights Reserved'
 description 'Installs/Configures kafka-config'
 long_description 'Installs/Configures kafka-config'
