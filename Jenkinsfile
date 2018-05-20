@@ -4,7 +4,7 @@ pipeline {
   agent any
   parameters {
     choice(
-      choices: 'YES\NO',
+      choices: 'YES\nNO',
       description: 'Build AMI feature toggle',
       name: 'BUILD_AMI')
   }
