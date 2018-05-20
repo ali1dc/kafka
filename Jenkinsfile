@@ -43,7 +43,7 @@ pipeline {
 
     stage('Deployment') {
       steps {
-        echo "Start deploying $(keystore.rb retrieve --table $inventory_store --keyname KAFKA_LATEST_AMI)"
+        echo 'Start deploying "$(keystore.rb retrieve --table $inventory_store --keyname KAFKA_LATEST_AMI)"'
         // Deploy Kafka
         rake 'deploy'
       }
