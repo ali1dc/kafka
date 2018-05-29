@@ -91,4 +91,18 @@ service 'kafka' do
   provider Chef::Provider::Service::Systemd
 end
 
+# Prometheus jmx exporter
+directory '/opt/prometheus'
+
+prometheus_agent = 'https://repo1.maven.org/maven2/io/prometheus/jmx/' \
+                   'jmx_prometheus_javaagent/0.6/' \
+                   'jmx_prometheus_javaagent-0.6.jar'
+remote_file '/opt/prometheus/jmx_prometheus_javaagent-0.6.jar' do
+  source prometheus_agent
+end
+
+cookbook_file '/opt/prometheus/kafka.yml' do
+  source 'prometheus-kafka.yml'
+end
+
 # rubocop:enable Naming/HeredocDelimiterNaming
