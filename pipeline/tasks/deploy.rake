@@ -30,7 +30,7 @@ task :deploy do
     'AsgSubnets' => asg_subnets,
     'AsgSubnetAzs' => asg_subnet_azs,
     'KeyName' => ks.query?('SSH_KEYNAME'),
-    'BrokerCount' => '3',
+    'BrokerCount' => '1',
     'MinInstancesInService' => '1',
     'InstanceSecgroup' => ks.query?('PRIVATE_SECURITY_GROUP'),
     'InstanceType' => 't2.large'
