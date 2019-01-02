@@ -5,7 +5,7 @@ pipeline {
   parameters {
     choice(
       choices: 'YES\nNO',
-      description: 'Build AMI feature toggle',
+      description: 'Do you want to build a new Kafka AMI?',
       name: 'BUILD_AMI')
   }
   stages {
@@ -24,6 +24,9 @@ pipeline {
     }
 
     stage('Kafka AMI') {
+      when {
+        expression { params.BUILD_AMI == 'YES' }
+      }
       steps {
         echo 'Create Vendor Cookbooks'
         sh '''
