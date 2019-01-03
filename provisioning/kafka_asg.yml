@@ -191,7 +191,7 @@ Resources:
         # MinSuccessfulInstancesPercent: 100
         MinSuccessfulInstancesPercent: 0
       ResourceSignal:
-        Count: 1
+        Count: 3
         Timeout: PT30M
   InstanceLc:
     Type: AWS::AutoScaling::LaunchConfiguration
