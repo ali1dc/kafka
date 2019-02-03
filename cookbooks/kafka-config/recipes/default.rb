@@ -26,7 +26,12 @@ bash 'install-cfn-tools' do
   SCRIPT
 end
 
-python_runtime '2'
+# python_runtime '2'
+python_runtime '2' do
+  # Workaround for https://github.com/poise/poise-python/issues/133
+  get_pip_url 'https://github.com/pypa/get-pip/raw/f88ab195ecdf2f0001ed21443e247fb32265cabb/get-pip.py'
+  pip_version '18.0'
+end
 
 %w[kazoo dnspython boto].each do |package|
   python_package package
@@ -44,11 +49,23 @@ bash 'link correct aws version' do
   EOH
 end
 
-package 'ruby'
+# package 'ruby'
+bash 'install rvm' do
+  code <<-EOH
+  sudo apt-get purge ruby
+  sudo apt-get install software-properties-common
+  sudo apt-add-repository -y ppa:rael-gc/rvm
+  sudo apt-get update
+  sudo apt-get install rvm -y
+  sudo /usr/share/rvm/bin/rvm install ruby 2.5.3
+  EOH
+end
 
+# source /usr/local/rvm/scripts/rvm
 bash 'install gems' do
   code <<-EOH
-  source /usr/local/rvm/scripts/rvm
+  source /usr/share/rvm/scripts/rvm
+  rvm use 2.5.3
   gem install aws-sdk keystore
   EOH
 end
