@@ -15,3 +15,5 @@ default['confluent']['kafka']['server.properties'].tap do |broker|
     '10.100.1.100:2181,10.100.2.100:2181,10.100.3.100:2181'
   broker['log.dirs'] = '/kafkalogs/logs'
 end
+
+override['poise-python']['options']['pip_version'] = '9.0.3'
