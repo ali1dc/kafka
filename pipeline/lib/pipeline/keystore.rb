@@ -31,6 +31,7 @@ module Pipeline
     def query(keyname, use_cache: true)
       return @keystore_cache[keyname] if \
         @keystore_cache.key?(keyname) && use_cache
+
       setup_keystore unless @keystore
       @keystore_cache[keyname] = @keystore.retrieve(key: keyname)
     end

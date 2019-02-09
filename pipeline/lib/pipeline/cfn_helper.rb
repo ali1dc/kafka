@@ -9,6 +9,7 @@ module Pipeline
   class CloudFormationHelper
     def aws_region
       return 'us-east-1' if ENV['AWS_REGION'].nil?
+
       ENV['AWS_REGION']
     end
 
