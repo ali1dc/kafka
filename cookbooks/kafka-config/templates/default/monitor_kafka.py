@@ -78,7 +78,7 @@ def handler_stop_signals(signum, frame):
 def get_instance_private_ip():
     """Return ens3 ip."""
     ens3 = check_output(['ip', '-f', 'inet', '-o', 'addr',
-                         'show', 'dev', 'eth0'])
+                         'show', 'dev', 'eth1'])
     for ens3_line in ens3.split("\n"):
         ens3_fields = ens3_line.split(" ")
         for c in range(len(ens3_fields)):

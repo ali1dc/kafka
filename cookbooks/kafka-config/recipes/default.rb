@@ -10,7 +10,7 @@ include_recipe 'confluent-cookbook::default'
 include_recipe 'confluent-cookbook::kafka'
 include_recipe 'lvm::default'
 
-%w[jq awscli].each do |pkg|
+%w[jq awscli ruby].each do |pkg|
   package pkg
 end
 
@@ -71,7 +71,12 @@ bash 'install gems' do
 end
 
 # Templated scripts
-%w[monitor_kafka.py attach_ebs.py].each do |f|
+%w[
+  monitor_kafka.py
+  attach_ebs.py
+  network_config.sh.erb
+  eni_switcher.rb
+].each do |f|
   template "/usr/local/bin/#{f}" do
     source f
     owner 'root'
