@@ -29,6 +29,18 @@ Parameters:
     Description: Instance SecurityGroup
     Type: String
     Default: t2.micro
+  Subnet1:
+    Description: Subnet for ENI 1
+    Type: String
+    Default: subnet-5a7dd010
+  Subnet2:
+    Description: Subnet for ENI 2
+    Type: String
+    Default: subnet-f9ecf5a4
+  Subnet3:
+    Description: Subnet for ENI 3
+    Type: String
+    Default: subnet-d88a7ebf
 Resources:
   NetworkInterface1:
     Type: AWS::EC2::NetworkInterface
