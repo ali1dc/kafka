@@ -63,7 +63,7 @@ class ENISwitcher
   end
 
   def configure_new_interface(eni_private_ip, instance_ip)
-    ipaddr = eni_private_ip
+    @ipaddr = eni_private_ip
     template = ERB.new File.read('/usr/local/bin/network_config.sh.erb')
     File.write('/usr/local/bin/network_config.sh', template.result(binding))
     File.chmod(0o755, '/usr/local/bin/network_config.sh')
