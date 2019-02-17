@@ -171,6 +171,8 @@ Resources:
           - - ''
             - "#!/bin/bash -e\n"
             - 'echo "hello userdata - running by $(whoami)"'
+            - 'echo "attach proper network interface"'
+            - 'ruby /usr/local/bin/eni_switcher.rb'
             - "\n"
             - 'sleep "$(shuf -i 1-100 -n 1)"'
             - "\n"
