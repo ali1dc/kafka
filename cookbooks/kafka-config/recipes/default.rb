@@ -71,17 +71,11 @@ bash 'install gems' do
 end
 
 # for user root
-bash 'install rvm and ruby as root' do
+bash 'install gem as root' do
   user 'root'
   code <<-EOH
-  apt-get install software-properties-common
-  apt-add-repository -y ppa:rael-gc/rvm
-  apt-get update
-  apt-get install rvm -y
-  /usr/share/rvm/bin/rvm install ruby 2.5.3
-  source /usr/share/rvm/scripts/rvm
-  rvm reinstall 2.5.3
-  gem install aws-sdk keystore
+  ruby --version
+  gem install aws-sdk trollop
   EOH
 end
 

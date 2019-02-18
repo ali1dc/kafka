@@ -184,6 +184,8 @@ Resources:
             - "#!/bin/bash -e\n"
             - 'echo "hello userdata - running by $(whoami)"'
             - "\n"
+            - "ruby --version\n"
+            - "gem install aws-sdk trollop\n"
             - 'echo "attach proper network interface"'
             - "\n"
             - "ruby /usr/local/bin/eni_switcher.rb\n"
