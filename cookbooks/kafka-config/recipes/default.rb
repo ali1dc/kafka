@@ -81,12 +81,12 @@ bash 'install rvm and ruby as root' do
   /usr/share/rvm/bin/rvm install ruby 2.5.3
   source /usr/share/rvm/scripts/rvm
   rvm reinstall 2.5.3
-  gem install aws-sdk keystore 
+  gem install aws-sdk keystore
   EOH
 end
 
 # Templated scripts
-%w[ monitor_kafka.py attach_ebs.py ].each do |f|
+%w[monitor_kafka.py attach_ebs.py].each do |f|
   template "/usr/local/bin/#{f}" do
     source f
     owner 'root'
@@ -95,7 +95,7 @@ end
   end
 end
 
-%w[ network_config.sh.erb eni_switcher.rb ].each do |f|
+%w[network_config.sh.erb eni_switcher.rb].each do |f|
   cookbook_file "/usr/local/bin/#{f}" do
     source f
     owner 'root'
