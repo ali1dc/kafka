@@ -70,14 +70,33 @@ bash 'install gems' do
   EOH
 end
 
+# for user root
+bash 'install rvm and ruby as root' do
+  user 'root'
+  code <<-EOH
+  apt-get install software-properties-common
+  apt-add-repository -y ppa:rael-gc/rvm
+  apt-get update
+  apt-get install rvm -y
+  /usr/share/rvm/bin/rvm install ruby 2.5.3
+  source /usr/share/rvm/scripts/rvm
+  rvm reinstall 2.5.3
+  gem install aws-sdk keystore 
+  EOH
+end
+
 # Templated scripts
-%w[
-  monitor_kafka.py
-  attach_ebs.py
-  network_config.sh.erb
-  eni_switcher.rb
-].each do |f|
+%w[ monitor_kafka.py attach_ebs.py ].each do |f|
   template "/usr/local/bin/#{f}" do
+    source f
+    owner 'root'
+    group 'root'
+    mode '0755'
+  end
+end
+
+%w[ network_config.sh.erb eni_switcher.rb ].each do |f|
+  cookbook_file "/usr/local/bin/#{f}" do
     source f
     owner 'root'
     group 'root'

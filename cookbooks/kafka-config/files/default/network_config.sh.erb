@@ -6,7 +6,7 @@ cat > /etc/network/interfaces.d/eth1.cfg <<ETHCFG
 auto eth1
 iface eth1 inet dhcp
     up ip route add default via $GATEWAY dev eth1 table eth1_rt
-    up ip rule add from <%= @ipaddr %> lookup eth1_rt prio 1000
+    up ip rule add from <%= ipaddr %> lookup eth1_rt prio 1000
 ETHCFG
 
 mv /etc/iproute2/rt_tables /etc/iproute2/backup.rt_tables.backup
@@ -28,4 +28,4 @@ RTTABLES
 ifup eth1
 
 ip route add default via $GATEWAY dev eth1 table eth1_rt ;
-ip rule add from <%= @ipaddr %> lookup eth1_rt prio 1000 ;
+ip rule add from <%= ipaddr %> lookup eth1_rt prio 1000 ;
