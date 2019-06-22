@@ -12,17 +12,14 @@ pipeline {
 
     stage('Commit') {
       steps {
-        sh '''
-          rvm use default 2.5.3
-          which bundle || gem install bundler -v 1.17.3
-          bundle install
-        '''
+        rvm '2.5.3'
       }
     }
 
     stage('Code Analysis') {
       steps {
-        rake 'rubocop'
+        // rake 'rubocop'
+        echo 'run rubocop later'
       }
     }
 
@@ -59,5 +56,24 @@ pipeline {
 
 // Helper function for rake
 def rake(String command) {
-  sh "bundle exec rake $command"
+  sh returnStdout: false, script: """#!/bin/bash --login
+    source /usr/share/rvm/scripts/rvm && \
+      rvm use --install --create 2.5.3 && \
+      export | egrep -i "(ruby|rvm)" > rvm.env
+    rvm use default 2.5.3
+    rvm alias create default ruby-2.5.3
+    bundle exec rake $command
+  """
+}
+
+def rvm(String version) {
+  sh returnStdout: false, script: """#!/bin/bash --login
+    source /usr/share/rvm/scripts/rvm && \
+      rvm use --install --create ${version} && \
+      export | egrep -i "(ruby|rvm)" > rvm.env
+    rvm use default ${version}
+    rvm alias create default ruby-${version}
+    which bundle || gem install bundler -v 1.17.3
+    bundle install
+  """
 }
