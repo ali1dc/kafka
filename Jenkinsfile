@@ -4,7 +4,7 @@ pipeline {
   agent any
   parameters {
     choice(
-      choices: 'YES\nNO',
+      choices: 'NO\nYES',
       description: 'Do you want to build a new Kafka AMI?',
       name: 'BUILD_AMI')
   }
@@ -12,8 +12,11 @@ pipeline {
 
     stage('Commit') {
       steps {
-        sh 'which bundle || gem install bundler -v 1.17.3'
-        sh 'bundle install'
+        sh '''
+          rvm use default 2.5.3
+          which bundle || gem install bundler -v 1.17.3
+          bundle install
+        '''
       }
     }
 
