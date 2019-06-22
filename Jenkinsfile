@@ -12,7 +12,7 @@ pipeline {
 
     stage('Commit') {
       steps {
-        sh 'which bundle || gem install bundler'
+        sh 'which bundle || gem install bundler -v 1.17.3'
         sh 'bundle install'
       }
     }
@@ -46,7 +46,7 @@ pipeline {
 
     stage('Deployment') {
       steps {
-        echo 'Start deploying "$(keystore.rb retrieve --table $inventory_store --keyname KAFKA_LATEST_AMI)"'
+        // echo 'Start deploying "$(keystore.rb retrieve --table $inventory_store --keyname KAFKA_LATEST_AMI)"'
         // Deploy Kafka
         rake 'deploy'
       }
