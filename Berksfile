@@ -7,4 +7,4 @@ cookbook 'confluent-cookbook',
          git: 'https://github.com/larsp/confluent-cookbook.git',
          branch: 'develop'
 
-metadata
+cookbook 'kafka-config', path: 'cookbooks/kafka-config'

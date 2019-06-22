@@ -9,7 +9,7 @@ require 'pipeline/keystore'
 desc 'Deploy Kafka'
 task :deploy do
   puts 'deploy cfn'
-  stack_name = 'ExDataLab-KAFKA'
+  stack_name = 'XSP-KAFKA'
   ks = Pipeline::Keystore.new
 
   # gather parameters

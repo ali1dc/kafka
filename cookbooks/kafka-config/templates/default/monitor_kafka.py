@@ -59,7 +59,7 @@ logger = logging.getLogger('monitor_kafka')
 run = True
 p_kafka = None
 # cluster_env = open('/etc/file_env', 'r').read().strip().lower()
-cluster_env = 'ExDataLab'
+cluster_env = 'XSP'
 
 def handler_stop_signals(signum, frame):
     global run

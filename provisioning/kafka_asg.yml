@@ -1,5 +1,5 @@
 ---
-Description: ExDataLab Confluent Kafka ASG Deployment
+Description: Excella Streaming Platform - Confluent Kafka ASG Deployment
 Parameters:
   VpcId:
     Description: VPC to deploy to
@@ -150,7 +150,7 @@ Resources:
         Value: Packer
         PropagateAtLaunch: true
       - Key: System
-        Value: ExDataLab
+        Value: XSP
         PropagateAtLaunch: true
       VPCZoneIdentifier:
         Ref: AsgSubnets
@@ -202,5 +202,5 @@ Resources:
 Outputs:
   Environment:
     Description: Environment launched into
-    Value: ExDataLab
+    Value: Excella Streaming Platform
 AWSTemplateFormatVersion: '2010-09-09'
