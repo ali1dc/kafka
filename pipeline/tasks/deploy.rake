@@ -32,6 +32,9 @@ task :deploy do
     'KeyName' => ks.query?('SSH_KEYNAME'),
     'BrokerCount' => '3',
     'MinInstancesInService' => '1',
+    'Subnet1' => subnet1,
+    'Subnet2' => subnet2,
+    'Subnet3' => subnet3,
     'InstanceSecgroup' => ks.query?('PRIVATE_SECURITY_GROUP'),
     'InstanceType' => 't2.large'
   ]
