@@ -83,7 +83,7 @@ def create_volume(conn, zone, tag):
     volume = conn.create_volume(
             volume_type='st1',
             encrypted='true',
-            size='500',
+            size='20',
             zone=zone)
 
     print 'Creating new volume volume_id: %s.' % volume.id
@@ -101,7 +101,7 @@ def create_volume_from_snapshot(conn, zone, snapshot, tag):
     volume = conn.create_volume(
             volume_type='st1',
             encrypted='true',
-            size='500',
+            size='20',
             zone=zone,
             snapshot=snapshot)
     print 'Creating volume volume_id: %s. from snapshot_id: %s.' % (volume.id, snapshot.id)
