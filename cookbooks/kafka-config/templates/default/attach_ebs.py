@@ -79,9 +79,11 @@ def get_volume(conn, region_name, instance_az, tag):
     else:
         return create_volume(conn, instance_az, tag)
 
+# Volume type better to be 'st1' for prod but because the minmum size in 500 for st1,
+# I go with gp2 with 20G for cost optimization.
 def create_volume(conn, zone, tag):
     volume = conn.create_volume(
-            volume_type='st1',
+            volume_type='gp2',
             encrypted='true',
             size='20',
             zone=zone)
@@ -99,7 +101,7 @@ def create_snapshot(conn, volume, description):
 
 def create_volume_from_snapshot(conn, zone, snapshot, tag):
     volume = conn.create_volume(
-            volume_type='st1',
+            volume_type='gp2',
             encrypted='true',
             size='20',
             zone=zone,
