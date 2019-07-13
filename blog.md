@@ -63,9 +63,23 @@ Before we go deeper, let's see why we need ENI. We need to create an environment
 
 In ASG launch configuration, we should follow this order to attach the ENI:
 1. Get broker id (covered [above](#broker-assignment))
+    ```ruby
+    require 'zookeeper'
+    def get_broker_id(zk_host)
+      zk = Zookeeper.new(zk_host)
+      assigned_ids = zk.get_children(:path => '/brokers/ids')[:children]
+      # our cluster size is 3 in our example
+      max_broker_count = 3
+      all_ids =* (0..(max_broker_count - 1)).map(&:to_s)
+      possible_ids = all_ids - assigned_ids
+      possible_ids.size == 0 ? -1 : possible_ids[0]
+    end
+    ```
 2. Get available ENI with the tag that contains broker id from step 1
     ```ruby
-    broker_id = get_broker_id()
+    zk_host = '10.100.1.100:2181,10.100.2.100:2181,10.100.3.100:2181'
+
+    broker_id = get_broker_id(zk_host)
     @ec2 = Aws::EC2::Client.new(region: region)
     # get the available eni
     eni = @ec2.describe_network_interfaces(
@@ -116,8 +130,67 @@ In ASG launch configuration, we should follow this order to attach the ENI:
 These scripts can be run by Chef in the launch configuration.
 
 ## EBS attachment
+Next step is attaching EBS volume, but why we need this? The main question is what is going to happen for the data is a broker got terminated or replaced by another one? Are we going to lose the data?
+The short answer is no under one condition; `Topic's replication factor`. 
+
+Kafka is a fault tolerant distributed system and it replicates data based on Topic's replication factor. The general formula is if the number of terminated instances (brokers) are equal or grater than number of Topic's replication, then we are going to lose the data. For example, If the replication factor is `1` and you terminate that broker, the data is gone. However, if we set the replication factor to a reasonable number, we protect that data, but the challenge is, every time that a broker got replaced that data need to be replicated over to the new broker and this can put lots of traffic ands stress on out network. (This happens often when we are on cloud. Think as resilient testing with [Chaos Monkey](https://github.com/Netflix/chaosmonkey))
+
+Now, in order to prevent full data replication over the new broker, we can leverage EBS volume attachment technic to attach the same volume based on broker id, over and over. Here is how we can achieve this goal; use an extra EBS volume for each broker and tag it with `KAFKA-#{broker_id}`, set the `Delete on termination` property to `false`, and attach it with the new replaced broker for the data folder. Here is a python code regarding how to do that:
+```python
+broker_id = get_broker_id()
+conn = ec2.connect_to_region(region_name)
+
+volume = conn.get_all_volumes(
+  filters = {
+    'tag:Name': "KAFKA-%s" % broker_id
+  })[0]
+# attach the volume
+conn.attach_volume(volume.id, instance_id, '/dev/xvdg')
+# mount it
+commands.getstatusoutput('mount /dev/xvdg /kafkalogs')
+```
 ## How to handle service discovery
+Not that we attached an extra network device or Elastic Network Interface, ENI, We can specify, the IP addresses that we want. In the Auto Scaling Group cloudformation template, we can provision ENI with whatever IP that we want in the subnet. Here is the how:
+```yaml
+NetworkInterface1:
+  Type: AWS::EC2::NetworkInterface
+  Properties:
+    SubnetId:
+      Ref: Subnet1
+    PrivateIpAddress: 10.100.1.200
+    Description: ENI for Kafka broker 0
+    GroupSet:
+    - Ref: InstanceSecurityGroup
+    Tags:
+    - Key: Name
+      Value: KAFKA-0
+```
+Now we always are aware of the new broker's IP (or hostname) and we simply can have the connection url. This is the Kafka connection url (AKA `bootstrap-server`) in our example:
+```
+broker 0: 10.100.1.200:9092
+broker 1: 10.100.2.200:9092
+broker 2: 10.100.3.200:9092
+
+cluster: 10.100.1.200:9092,10.100.2.200:9092,10.100.3.200:9092
+```
 ## Why it is self-healing
+In section [ENT attachment](#eni-attachment), I covered how we can attach a network interface to the broker with the same id and [here](ebs-attachment), I covered how we can attach an EBS volume and reuse it for all brokers with same id in the history of the Kafka cluster. And last but not least, we assume that we leverage Auto scaling Group for the cluster deployment. Now let's review a case of broker termination:
+
+* Let's assume Kafka broker 0 got terminated
+* Because we have Auto Scaling Group, a new broker starts
+* From lunch configuration (or userdata) these steps will run:
+  1. Available broker id determination from Zookeeper (`0` in this case)
+  2. ENI attachment with tag name of `KAFKA-0` (if it is not available yet, wait for a few seconds)
+  3. EBS volume attachment with tag name of `KAFKA-0` (if it is not available yet, wait for a few seconds)
+* If steps 1, 2, and 3 were successfully ran to completion, then a successful signal will be sent to the cloudformation stack:
+    ```sh
+    cfn-signal -e 0 --stack $stack_name --resource InstanceAsg --region us-east-1
+    ```
+* if any of steps 1, 2, or 3 were not successful, then cloudformation stack and ASG consider that node as unhealthy, will terminate that broker, and will continue the process again until it gets a healthy broker with id of `0`
+
+As we can see, there is no manual job what so ever with this way and we can consider this as Self-Healing cluster or Kafka as a Service.
+
+[Here](git@github.com:ali1dc/xd-kafka.git) you can find the source code for the Kafka as a Service configuration, ready for AWS deployment.
 
 ### References
 - https://kafka.apache.org
