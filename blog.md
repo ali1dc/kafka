@@ -137,6 +137,9 @@ Kafka is a fault tolerant distributed system and it replicates data based on Top
 
 Now, in order to prevent full data replication over the new broker, we can leverage EBS volume attachment technic to attach the same volume based on broker id, over and over. Here is how we can achieve this goal; use an extra EBS volume for each broker and tag it with `KAFKA-#{broker_id}`, set the `Delete on termination` property to `false`, and attach it with the new replaced broker for the data folder. Here is a python code regarding how to do that:
 ```python
+from boto import ec2
+import commands
+
 broker_id = get_broker_id()
 conn = ec2.connect_to_region(region_name)
 
@@ -150,7 +153,7 @@ conn.attach_volume(volume.id, instance_id, '/dev/xvdg')
 commands.getstatusoutput('mount /dev/xvdg /kafkalogs')
 ```
 ## How to handle service discovery
-Not that we attached an extra network device or Elastic Network Interface, ENI, We can specify, the IP addresses that we want. In the Auto Scaling Group cloudformation template, we can provision ENI with whatever IP that we want in the subnet. Here is the how:
+Now that we attached an extra network device or Elastic Network Interface, ENI, We can specify, the IP addresses that we want. In the Auto Scaling Group cloudformation template, we can provision ENI with whatever IP that we want in the subnet. Here is the how:
 ```yaml
 NetworkInterface1:
   Type: AWS::EC2::NetworkInterface
@@ -174,7 +177,7 @@ broker 2: 10.100.3.200:9092
 cluster: 10.100.1.200:9092,10.100.2.200:9092,10.100.3.200:9092
 ```
 ## Why it is self-healing
-In section [ENT attachment](#eni-attachment), I covered how we can attach a network interface to the broker with the same id and [here](ebs-attachment), I covered how we can attach an EBS volume and reuse it for all brokers with same id in the history of the Kafka cluster. And last but not least, we assume that we leverage Auto scaling Group for the cluster deployment. Now let's review a case of broker termination:
+In section [ENI attachment](#eni-attachment), I covered how we can attach a network interface to the broker with the same id and [here](ebs-attachment), I covered how we can attach an EBS volume and reuse it for all brokers with same id in the history of the Kafka cluster. And last but not least, we assume that we leverage Auto Scaling Group for the cluster deployment. Now let's review a case of broker termination:
 
 * Let's assume Kafka broker 0 got terminated
 * Because we have Auto Scaling Group, a new broker starts
