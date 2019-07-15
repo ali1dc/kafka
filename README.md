@@ -28,7 +28,7 @@ Founded by the original developers of Apache Kafka, [Confluent](https://confluen
 1. Run [Zookeeper](https://github.com/ali1dc/xd-zookeeper#run-in-locally)
 2. Run Kafka locally:
     ```sh
-    $ docker compose up
+    $ docker-compose up
     ```
 3. Run some commands:
     ```sh
