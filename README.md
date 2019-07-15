@@ -20,7 +20,7 @@ Founded by the original developers of Apache Kafka, [Confluent](https://confluen
 2. Set some environment variables:
     ```sh
     export zk=10.100.1.100:2181,10.100.2.100:2181,10.100.3.100:2181
-    export zk=10.100.1.200:9092,10.100.2.200:9092,10.100.3.200:9092
+    export kafka=10.100.1.200:9092,10.100.2.200:9092,10.100.3.200:9092
     ```
 3. Now you can start!
 
