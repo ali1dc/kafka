@@ -1,4 +1,4 @@
-In this article, I want to talk about a challenging task; deploying Apache Kafka as service on AWS. But before I deep dive, let's see what is Apache Kafka, what are its capabilities and applications.
+Apache Kafka is a community distributed event streaming/processing platform capable of handling trillions of events a day. Managing Kafka, especially in cloud environments can be a difficult and daunting task. In this blog post, I will address the challenge of deploying Kafka as a Service on AWS; but first, let's see what is Kafka and what are its capabilities and applications.
 
 ## What is Kafka
 Apache Kafka is a community distributed event streaming platform capable of handling trillions of events a day. Initially conceived as a messaging queue, Kafka is based on an abstraction of a distributed commit log. Since being created and open sourced by LinkedIn in 2011, Kafka has quickly evolved from messaging queue to a full-fledged event streaming platform.
