@@ -22,7 +22,7 @@ From the Prometheus [download](https://prometheus.io/download/) page, download a
 ```sh
 $ wget https://github.com/prometheus/prometheus/releases/download/v2.11.1/prometheus-2.11.1.linux-amd64.tar.gz
 
-# check the checksum
+# compare the checksum
 $ sha256sum prometheus-2.11.1.linux-amd64.tar.gz
 
 # untar 
@@ -114,3 +114,68 @@ Now if you browse to the host with port `9090` (http://<ec2_ip_address>:9090) yo
 **Please note;** Prometheus does not have built-in authentication, instead you can use `nginx` to add basic HTTP authentication.
 
 ## Node Exporter
+For collecting metrics from any EC2 instances such as Kafka brokers and Zookeeper nodes, we need to install `Node Exporter`. We can use [this cookbook](https://supermarket.chef.io/cookbooks/prometheus-platform) to automate the process of installation. However for simplicity, I will show you how to install it by some shell command:
+
+### Step 1: Create User
+```sh
+$ sudo useradd --no-create-home --shell /bin/false node_exporter
+```
+
+### Step 2: Download & Install the Node Exporter
+
+Download the current stable version of Node Exporter from [here](https://github.com/prometheus/node_exporter/releases)
+```sh
+$  wget https://github.com/prometheus/node_exporter/releases/download/v0.18.1/node_exporter-0.18.1.linux-amd64.tar.gz
+
+# compare the checksum
+$ sha256sum node_exporter-0.18.1.linux-amd64.tar.gz
+
+# untar
+$ tar xvf node_exporter-0.18.1.linux-amd64.tar.gz
+
+# copy the binary to the /usr/local/bin and set the ownership
+$ sudo cp node_exporter-0.18.1.linux-amd64/node_exporter /usr/local/bin/
+$ sudo chown node_exporter:node_exporter /usr/local/bin/node_exporter
+
+# cleanup
+$ rm -rf node_exporter-0.18.1.linux-amd64*
+```
+
+### Step 3: Running Node Exporter as Service
+Create the file `node_exporter.service` under the `/etc/systemd/system/` folder with this content:
+```
+[Unit]
+Description=Node Exporter
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=node_exporter
+Group=node_exporter
+Type=simple
+ExecStart=/usr/local/bin/node_exporter --web.listen-address=":7072"
+
+[Install]
+WantedBy=multi-user.target
+```
+Reload systemd
+```sh
+$ sudo systemctl daemon-reload
+```
+Finally, enable and start the service on boot:
+```sh
+$ sudo systemctl start node_exporter
+$ sudo systemctl enable node_exporter
+```
+
+Alright, at this point, we can assume that the node exporter is running on all Zookeeper and Kafka brokers. In the following I am going to cover the Zookeeper and Kafka configuration for Prometheus and Node Exporter.
+
+## Server Metrics
+There are 2 kind on Metrics we should collect from Kafka brokers:
+
+1. Internal metrics: JMX specific metrics, the default reporter, though we can add any pluggable reporter. Example: PartitionCount, UnderReplicatedPartitions, and OfflinePartitionsCount. Check [here](https://docs.confluent.io/current/kafka/monitoring.html) for the full list.  
+2. Node Exporter metrics: hardware and operating system specific metrics, such as CPU, network and memory utilization. 
+
+### Kafka Configuration 
+
+
