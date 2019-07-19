@@ -294,11 +294,11 @@ In this section, I am going to walk you through to setting up the visualization 
 3. From left bar, navigate to Configuration -> Data Sources, and click on `Add data source` button, and add Prometheus data source. Add previously configured Prometheus url, and set it as default. 
 4. From left bar, navigate to Dashboard -> Manage, click on `Import` button, and copy the content of [kafka-overview.json](https://github.com/excellalabs/grafana/blob/master/dashboards/kafka-overview.json) file, and paste it in the `paste JSON` box, and then click on `Load`
 5. Show time! Check `Kafka Overview` dashboard:
-![overview](./documents/overview.png)
+![overview](overview.png)
 Kafka details:
-![topic details](./documents/topics-details.png)
+![topic details](topics-details.png)
 Zookeeper details:
-![zookeeper details](./documents/zk-details.png)
+![zookeeper details](zk-details.png)
 
 ## conclusion
 As you can see now, this gadget looks very professional and as far as the functionality, it is very promising. Here is the list of repositories that can help you to have CI/CD pipelines for deploying the Kafka ecosystem on AWS:
