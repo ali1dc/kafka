@@ -1,9 +1,9 @@
 Apache Kafka is a community distributed event streaming/processing platform capable of handling trillions of events a day. Managing Kafka, especially in cloud environments can be a difficult and daunting task. In this blog post, I will address the challenge of deploying Kafka as a Service on AWS; but first, let's see what is Kafka and what are its capabilities and applications.
 
 ## What is Kafka
-Apache Kafka is a community distributed event streaming platform capable of handling trillions of events a day. Initially conceived as a messaging queue, Kafka is based on an abstraction of a distributed commit log. Since being created and open sourced by LinkedIn in 2011, Kafka has quickly evolved from messaging queue to a full-fledged event streaming platform.
+Apache Kafka is a community distributed event streaming platform capable of handling trillions of events a day. Initially conceived as a messaging queue, Kafka is based on an abstraction of a distributed commit log. Since being created and open-sourced by LinkedIn in 2011, Kafka has quickly evolved from messaging queue to a full-fledged event streaming platform.
 
-Kafka as streaming platform has three key capabilities:
+Kafka as a streaming platform has three key capabilities:
 - Publish and subscribe to streams of records, similar to a message queue or enterprise messaging system.
 - Store streams of records in a fault-tolerant durable way.
 - Process streams of records as they occur.
@@ -13,28 +13,28 @@ Kafka is generally used for two broad classes of applications:
 - Building real-time streaming applications that transform or react to the streams of data
 
 ## What is Confluent
-Founded by the original developers of Apache Kafka, Confluent delivers the most complete distribution of Kafka with Confluent Platform. Confluent Platform improves Kafka with additional community and commercial features designed to enhance the streaming experience of both operators and developers in production, at massive scale.
+Founded by the original developers of Apache Kafka, Confluent delivers the most complete distribution of Kafka with Confluent Platform. Confluent Platform improves Kafka with additional community and commercial features designed to enhance the streaming experience of both operators and developers in production, at a massive scale.
 
 ## Challenge with cloud (AWS)
 Provisioning Kafka cluster on AWS can be as simple as installing Java and Confluent Platform packages or in a more professional way, using Chef and Packer, we simply can create an AMI with Kafka and all dependencies installed on that box. But the challenge in the Kafka configuration:
 - How do we determine the broker id for each broker?
-- How we handle broker replacement? On in other word, how we tell to the other brokers about new broker IP address?
+- How we handle broker replacement? On in other words, how we tell to the other brokers about new broker IP address?
 - In the event of new broker initialization, how we manage data replication?
 
 ### Assumptions
 1. We are having a cluster of 3 brokers
-2. Each brokers deployed on an EC2 instance in one Available Zone - AZ
+2. Each broker deployed on an EC2 instance in one Available Zone - AZ
 3. We are leveraging Auto Scaling Group - ASG
 4. Using [Chef](https://www.chef.io/) and [Packer](https://www.packer.io/) to bake Confluent Kafka and all dependencies
 5. Using [Keystore](https://github.com/stelligent/keystore) for secret and configuration management
 
-Now, let's talk about deploying Kafka cluster (Confluent flavor) on AWS as a service. Means, there is no manual installation or configuration, in case of any broker replacement, proper configuration (such as broker id assignment) is automated and no manual configuration needed what so ever!
+Now, let's talk about deploying the Kafka cluster (Confluent flavor) on AWS as a service. Means, there is no manual installation or configuration, in case of any broker replacement, proper configuration (such as broker id assignment) is automated and no manual configuration needed what so ever!
 
 ## Broker assignment
-One of the mandatory Kafka properties is broker's `id`. It can be string or number, but it needs to be unique in the cluster. Now the challenge is how we set this value? 
-There may be a several way to address this challenge, and I will cover two in this article:
-1. **Use EC2 instance id;** it is very simple to setup, but the issue is in case of broker replacement, all replication can put a heavy traffic on the network. Other downside is if all brokers got terminated, we will lose the data. This option seems a viable one for the big cluster.
-2. **Use number 0 to N;** it needs some custom code and the idea is to query the Zookeeper, see what id is available (not taken yet), and pick the first one. The script needs to be smart enough to handle multiple request and not to assign duplicate id, however, this may not be a simple task. The main benefit of this option is that we can predict the broker id and provision some resources like EBS and ENI (covered in next section), and apply them to each broker every time. This option is good for small to medium size of cluster. Here is some example in python about how we can manage the broker assignment:
+One of the mandatory Kafka properties is the broker's `id`. It can be string or number, but it needs to be unique in the cluster. Now the challenge is how we set this value? 
+There may be several ways to address this challenge, and I will cover two in this article:
+1. **Use EC2 instance id;** it is very simple to set up, but the issue is in case of broker replacement, all replication can put heavy traffic on the network. Another downside is if all brokers got terminated, we will lose the data. This option seems a viable one for the big cluster.
+2. **Use number 0 to N;** it needs some custom code and the idea is to query the Zookeeper, see what id is available (not taken yet), and pick the first one. The script needs to be smart enough to handle multiple request and not to assign duplicate id, however, this may not be a simple task. The main benefit of this option is that we can predict the broker id and provision some resources like EBS and ENI (covered in next section), and apply them to each broker every time. This option is good for small to medium size of the cluster. Here is some example in python about how we can manage the broker assignment:
     ```python
     from kazoo.client import KazooClient
 
@@ -50,14 +50,14 @@ There may be a several way to address this challenge, and I will cover two in th
     broker_id = sorted(possible_broker_ids - set_broker_ids)[0]
     ```
 
-In this article my focus would be on option two with broker ids of 0, 1 and 2.
+In this article, my focus would be on option two with broker ids of 0, 1 and 2.
 
 ## ENI attachment
 
 Since we know the broker id, attaching ENI is easy, because we simply can map broker ids with the ENI tags:
-1. id = 0 map to ENI tag KAFKA-0
-2. id = 1 map to ENI tag KAFKA-1
-3. id = 2 map to ENI tag KAFKA-2
+1. id = 0 maps to ENI tag KAFKA-0
+2. id = 1 maps to ENI tag KAFKA-1
+3. id = 2 maps to ENI tag KAFKA-2
 
 Before we go deeper, let's see why we need ENI. We need to create an environment with the static internal IP addresses for the brokers, means if a broker got replaced, the new one get the same IP address. With Elastic Network Interface - ENI, we can manage ENI attachment in a fairly uncomplicated manner.
 
@@ -133,9 +133,9 @@ These scripts can be run by Chef in the launch configuration.
 Next step is attaching EBS volume, but why we need this? The main question is what is going to happen for the data is a broker got terminated or replaced by another one? Are we going to lose the data?
 The short answer is no under one condition; `Topic's replication factor`. 
 
-Kafka is a fault tolerant distributed system and it replicates data based on Topic's replication factor. The general formula is if the number of terminated instances (brokers) are equal or grater than number of Topic's replication, then we are going to lose the data. For example, If the replication factor is `1` and you terminate that broker, the data is gone. However, if we set the replication factor to a reasonable number, we protect that data, but the challenge is, every time that a broker got replaced that data need to be replicated over to the new broker and this can put lots of traffic ands stress on out network. (This happens often when we are on cloud. Think as resilient testing with [Chaos Monkey](https://github.com/Netflix/chaosmonkey))
+Kafka is a fault-tolerant distributed system and it replicates data based on Topic's replication factor. The general formula is if the number of terminated instances (brokers) are equal or greater than the number of Topic's replication, then we are going to lose the data. For example, If the replication factor is `1` and you terminate that broker, the data is gone. However, if we set the replication factor to a reasonable number, we protect that data, but the challenge is, every time that a broker got replaced that data need to be replicated over to the new broker and this can put lots of traffic and stress on our network. (This happens often when we are on the cloud. Think as resilient testing with [Chaos Monkey](https://github.com/Netflix/chaosmonkey))
 
-Now, in order to prevent full data replication over the new broker, we can leverage EBS volume attachment technic to attach the same volume based on broker id, over and over. Here is how we can achieve this goal; use an extra EBS volume for each broker and tag it with `KAFKA-#{broker_id}`, set the `Delete on termination` property to `false`, and attach it with the new replaced broker for the data folder. Here is a python code regarding how to do that:
+Now, to prevent a full data replication over the new broker, we can leverage the EBS volume attachment technic to attach the same volume, based on broker id, over and over. Here is how we can achieve this goal; use an extra EBS volume for each broker and tag it with `KAFKA-#{broker_id}`, set the `Delete on termination` property to `false`, and attach it with the new replaced broker for the data folder. Here is a python code regarding how to do that:
 ```python
 from boto import ec2
 import commands
@@ -153,7 +153,7 @@ conn.attach_volume(volume.id, instance_id, '/dev/xvdg')
 commands.getstatusoutput('mount /dev/xvdg /kafkalogs')
 ```
 ## How to handle service discovery
-Now that we attached an extra network device or Elastic Network Interface, ENI, We can specify, the IP addresses that we want. In the Auto Scaling Group cloudformation template, we can provision ENI with whatever IP that we want in the subnet. Here is the how:
+Now that we attached an extra network device or Elastic Network Interface, ENI, We can specify, the IP addresses that we want. In the Auto Scaling Group cloudformation template, we can provision ENI with whatever IP that we want in the subnet. Here is how:
 ```yaml
 NetworkInterface1:
   Type: AWS::EC2::NetworkInterface
@@ -168,7 +168,7 @@ NetworkInterface1:
     - Key: Name
       Value: KAFKA-0
 ```
-Now we always are aware of the new broker's IP (or hostname) and we simply can have the connection url. This is the Kafka connection url (AKA `bootstrap-server`) in our example:
+Now we are always aware of the new broker's IP (or hostname) and we simply can have the connection url. This is the Kafka connection url (AKA `bootstrap-server`) in our example:
 ```
 broker 0: 10.100.1.200:9092
 broker 1: 10.100.2.200:9092
@@ -177,19 +177,19 @@ broker 2: 10.100.3.200:9092
 cluster: 10.100.1.200:9092,10.100.2.200:9092,10.100.3.200:9092
 ```
 ## Why it is self-healing
-In section [ENI attachment](#eni-attachment), I covered how we can attach a network interface to the broker with the same id and [here](ebs-attachment), I covered how we can attach an EBS volume and reuse it for all brokers with same id in the history of the Kafka cluster. And last but not least, we assume that we leverage Auto Scaling Group for the cluster deployment. Now let's review a case of broker termination:
+In section [ENI attachment](#eni-attachment), I covered how we can attach a network interface to the broker with the same id and [here](ebs-attachment), I covered how we can attach an EBS volume and reuse it for all brokers with the same id in the history of the Kafka cluster. And last but not least, we assume that we leverage Auto Scaling Group for the cluster deployment. Now let's review a case of broker termination:
 
 * Let's assume Kafka broker 0 got terminated
 * Because we have Auto Scaling Group, a new broker starts
 * From lunch configuration (or userdata) these steps will run:
   1. Available broker id determination from Zookeeper (`0` in this case)
-  2. ENI attachment with tag name of `KAFKA-0` (if it is not available yet, wait for a few seconds)
-  3. EBS volume attachment with tag name of `KAFKA-0` (if it is not available yet, wait for a few seconds)
-* If steps 1, 2, and 3 were successfully ran to completion, then a successful signal will be sent to the cloudformation stack:
+  2. ENI attachment with a tag name of `KAFKA-0` (if it is not available yet, wait for a few seconds)
+  3. EBS volume attachment with a tag name of `KAFKA-0` (if it is not available yet, wait for a few seconds)
+* If steps 1, 2, and 3 successfully ran to completion, then a successful signal will be sent to the cloudformation stack:
     ```sh
     cfn-signal -e 0 --stack $stack_name --resource InstanceAsg --region us-east-1
     ```
-* if any of steps 1, 2, or 3 were not successful, then cloudformation stack and ASG consider that node as unhealthy, will terminate that broker, and will continue the process again until it gets a healthy broker with id of `0`
+* if any of steps 1, 2, or 3 were not successful, then cloudformation stack and ASG consider that node as unhealthy, will terminate that broker and will continue the process again until it gets a healthy broker with an id of `0`
 
 As we can see, there is no manual job what so ever with this way and we can consider this as Self-Healing cluster or Kafka as a Service.
 
