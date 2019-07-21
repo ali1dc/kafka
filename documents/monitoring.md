@@ -13,10 +13,7 @@ Here is the list of tools and libraries that we need to achieve our goal:
 Now let's dive into each tool and talk about how we can set them up.
 
 ## Prometheus
-For automating the process of installation, we can use [this Chef cookbook](https://supermarket.chef.io/cookbooks/prometheus-platform), however for simplicity, I will show you how to install it by some shell command:
-
-
-The first thing we need is an EC2 instance, create an Ubuntu 16.04 EC2 instance on AWS and ssh into it. We can use [this cookbook](https://supermarket.chef.io/cookbooks/prometheus-platform) to automate the process of installation Now we are ready to install and configure the Prometheus:
+For automating the process of installation, we can use [this Chef cookbook](https://supermarket.chef.io/cookbooks/prometheus-platform), however for simplicity, I will show you how to install it by some shell command, but first, we need an EC2 instance withUbuntu 16.04 on it. Create one and ssh into it. Now we are ready to install and configure the Prometheus:
 
 ### Downloading Prometheus
 From the Prometheus [download](https://prometheus.io/download/) website, download and set up the latest stable version:
@@ -47,7 +44,7 @@ $ sudo chown prometheus:prometheus /var/lib/prometheus
 $ sudo cp prometheus-2.11.1.linux-amd64/prometheus /usr/local/bin/
 $ sudo cp prometheus-2.11.1.linux-amd64/promtool /usr/local/bin/
 
-# change tht ownership to prometheus user
+# change the ownership to prometheus user
 $ sudo chown prometheus:prometheus /usr/local/bin/prometheus
 $ sudo chown prometheus:prometheus /usr/local/bin/promtool
 
@@ -73,7 +70,7 @@ scrape_configs:
       - targets: ['localhost:9090']
 ```
 
-Now change the ownership of the file to newly created user `prometheus`:
+And change the ownership of the file to newly created user `prometheus`:
 ```sh
 $ sudo chown prometheus:prometheus /etc/prometheus/prometheus.yml
 ```
@@ -135,7 +132,7 @@ $ curl http://<host-ip-address>:9100/metrics
 
 Alright, at this point, we can assume that the node exporter is running on all Zookeeper and Kafka brokers. In the following, I am going to cover the Zookeeper and Kafka configuration for Prometheus and Node Exporter.
 
-## Server Metrics
+## Metrics
 There are two kinds of Metrics we should collect from Kafka brokers:
 
 1. Internal metrics: JMX specific metrics, the default reporter, though we can add any pluggable reporter. Example: PartitionCount, UnderReplicatedPartitions, and OfflinePartitionsCount. Check [here](https://docs.confluent.io/current/kafka/monitoring.html) for the full list.  
@@ -145,7 +142,7 @@ There are two kinds of Metrics we should collect from Kafka brokers:
 First, Confirm the Node Exporter is installed and functional on port `9100`
 
 Seconds, setup the JMX internal reporter:
-1. Download the [java agent(https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.6/jmx_prometheus_javaagent-0.9.jar)] jar file from maven repository and copy it under `/opt/prometheus/` folder:
+1. Download the [java agent(https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.6/jmx_prometheus_javaagent-0.9.jar)] jar file from maven repository and copy it under `/opt/prometheus/` folder. Chef example:
     ```ruby
     # Prometheus jmx exporter
     directory '/opt/prometheus'
@@ -157,7 +154,7 @@ Seconds, setup the JMX internal reporter:
       source prometheus_agent
     end
     ```
-2. Create the configuration yaml file with the content from [here](https://github.com/excellalabs/kafka/blob/master/cookbooks/kafka-config/files/default/prometheus-kafka.yml). Here is the Chef source code:
+2. Create the configuration yaml file with the content from [here](https://github.com/excellalabs/kafka/blob/master/cookbooks/kafka-config/files/default/prometheus-kafka.yml). This is the Chef source code:
     ```ruby
     cookbook_file '/opt/prometheus/kafka.yml' do
       source 'prometheus-kafka.yml'
@@ -210,8 +207,6 @@ Monitoring other Kafka or Confluent components such as KSQL, Schema Registry, Pr
 Now that we know how to gather metrics, it's time for visualization!
 
 ## Collecting Metrics
-At this point, we have all the endpoints to call and get the metrics data, 
-
 Now that we have all the `/metrics` endpoints, we need to configure the Prometheus to call these endpoint periodically for collecting the data. To do that, edit `/etc/prometheus/prometheus.yml` from Prometheus server with this content:
 ```yaml
 global:
@@ -274,7 +269,7 @@ Kafka details:
 Zookeeper details:
 ![zookeeper details](zk-details.png)
 
-## conclusion
+## Conclusion
 As you can see now, this gadget looks very professional and as far as the functionality, it is very promising. Here is the list of repositories that can help you to have CI/CD pipelines for deploying the Kafka ecosystem on AWS:
 
 * https://github.com/excellalabs/kafka
